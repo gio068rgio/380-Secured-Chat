@@ -1,0 +1,40 @@
+keys.c:62keys.c:62:3: error: call to undeclared function '__gmp_fprintf'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+                gmp_fprintf(f, "pk:%Zd\n", k->PK);
+                ^
+/opt/homebrew/Cellar/gmp/6.3.0/include/gmp.h:542:21: note: expanded from macro 'gmp_fprintf'
+#define gmp_fprintf __gmp_fprintf
+                    ^
+:3: error: call to undeclared function '__gmp_fprintf'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+                gmp_fprintf(f, "pk:%Zd\n", k->PK);
+                ^
+/opt/homebrew/Cellar/gmp/6.3.0/include/gmp.h:542:21: note: expanded from macro 'gmp_fprintf'
+#define gmp_fprintf __gmp_fprintf
+                    ^
+keys.c:69:2: error: call to undeclared function '__gmp_fprintf'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+keys.c:69:2: error: call to undeclared function '__gmp_fprintf'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+        gmp_fprintf(f, "pk:%Zd\n", k->PK);
+        ^
+/opt/homebrew/Cellar/gmp/6.3.0/include/gmp.h:542:21:        gmp_fprintf(f, "pk:%Zd\n", k->PK);
+        ^
+/opt/homebrew/Cellar/gmp/6.3.0/include/gmp.h:542:21: note: expanded from macro 'gmp_fprintf'
+#define gmp_fprintf __gmp_fprintf
+                    ^
+ note: expanded from macro 'gmp_fprintf'
+#define gmp_fprintf __gmp_fprintf
+                    ^
+keys.c:91:6: error: call to undeclared function '__gmp_fscanf'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+keys.c:91:6: error: call to undeclared function '__gmp_fscanf'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+        if (gmp_fscanf(f,"pk:%Zd\n",k->PK) != 1) {
+            ^
+/opt/homebrew/Cellar/gmp/6.3.0/include/gmp.h:594:20: note: expanded from macro 'gmp_fscanf'
+#define gmp_fscanf __gmp_fscanf
+                   ^
+        if (gmp_fscanf(f,"pk:%Zd\n",k->PK) != 1) {
+            ^
+/opt/homebrew/Cellar/gmp/6.3.0/include/gmp.h:594:20: note: expanded from macro 'gmp_fscanf'
+#define gmp_fscanf __gmp_fscanf
+                   ^
+3 errors generated.
+3 errors generated.
+make: make: *** [keys.o] Error 1
+*** [keys.o] Error 1
