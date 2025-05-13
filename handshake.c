@@ -11,7 +11,7 @@
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
 #include <openssl/rand.h>
-
+#include "util.h"  
 #include "handshake.h"
 
 #define KEY_SIZE 128
@@ -99,75 +99,35 @@ int verifyAndDecrypt(unsigned char* encryptedAESKey, unsigned char* cipherText, 
     return 1;
 }
 
-void handshakeProtocol() {
-    mpz_t aliceSecretKey, alicePubKey;
-    mpz_init(aliceSecretKey);
-    mpz_init(alicePubKey);
-    generateEphemeralKeyPair(aliceSecretKey, alicePubKey);
 
-    mpz_t bobSecretKey, bobPubKey;
-    mpz_init(bobSecretKey);
-    mpz_init(bobPubKey);
-    generateEphemeralKeyPair(bobSecretKey, bobPubKey);
 
-    unsigned char aliceSharedSecret[KEY_SIZE];
-    unsigned char bobSharedSecret[KEY_SIZE];
+void handshakeProtocol(int sockfd, int isClient, unsigned char* sharedSecretOut) {
+    dhKey myEphemeral, peerEphemeral;
+    initKey(&myEphemeral);
+    initKey(&peerEphemeral);
 
-    deriveSharedSecretPubKey(aliceSecretKey, alicePubKey, bobPubKey, aliceSharedSecret, KEY_SIZE);
-    deriveSharedSecretPubKey(bobSecretKey, bobPubKey, alicePubKey, bobSharedSecret, KEY_SIZE);
+    // Generate own ephemeral key
+    dhGenk(&myEphemeral);
 
-    if (memcmp(aliceSharedSecret, bobSharedSecret, KEY_SIZE) != 0) {
-        printf("Key exchange failed!\n");
-        return;
+    if (isClient) {
+        // Send my public key
+        serialize_mpz(sockfd, myEphemeral.PK);
+
+        // Receive peer's public key
+        deserialize_mpz(peerEphemeral.PK, sockfd);
+    } else {
+        // Receive first
+        deserialize_mpz(peerEphemeral.PK, sockfd);
+
+        // Then send my public key
+        serialize_mpz(sockfd, myEphemeral.PK);
     }
 
-    printf("Shared secrets match! Proceeding with secure message...\n");
+    // Derive the shared key
+    dhFinal(myEphemeral.SK, myEphemeral.PK, peerEphemeral.PK, sharedSecretOut, KEY_SIZE);
 
-    // Alice wants to send this message to Bob
-    const char* plaintext = "Hello Bob, this is Alice!";
-    size_t plaintextLen = strlen(plaintext);
+    fprintf(stderr, "[handshake] Shared secret established.\n");
 
-    // Buffers
-    unsigned char encryptedAESKey[256];
-    unsigned char ciphertext[1024];
-    unsigned char signature[256];
-    unsigned char mac[EVP_MAX_MD_SIZE];
-    unsigned char decrypted[1024];
-
-    int cipherLen = 0;
-    unsigned int sigLen = 0;
-
-    
-    encryptThenSign(aliceSecretKey, alicePubKey,
-                    (unsigned char*)plaintext, plaintextLen,
-                    encryptedAESKey, ciphertext, &cipherLen,
-                    signature, &sigLen);
-
-    
-    generateMAC(aliceSharedSecret, ciphertext, cipherLen, mac);
-
-   
-
-    printf("Alice sent encrypted message with HMAC and signature.\n");
-
-   
-    if (!verifyMAC(bobSharedSecret, ciphertext, cipherLen, mac)) {
-        printf("MAC verification failed. Message may have been tampered with!\n");
-        mpz_clears(aliceSecretKey, alicePubKey, bobSecretKey, bobPubKey, NULL);
-        return;
-    }
-
-    printf("MAC verified successfully!\n");
-
-    
-    if (!verifyAndDecrypt(encryptedAESKey, ciphertext, cipherLen, signature, sigLen, decrypted)) {
-        printf("Decryption or signature verification failed!\n");
-        mpz_clears(aliceSecretKey, alicePubKey, bobSecretKey, bobPubKey, NULL);
-        return;
-    }
-
-    printf("Decrypted message: %s\n", decrypted);
-
-  
-    mpz_clears(aliceSecretKey, alicePubKey, bobSecretKey, bobPubKey, NULL);
+    shredKey(&myEphemeral);
+    shredKey(&peerEphemeral);
 }
